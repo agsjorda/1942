@@ -1,34 +1,144 @@
-<!DOCTYPE html>
-<html lang="en">
+<html>
 	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>Multiplayer Game</title>
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous" />
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
-		<!-- <script src="/js/index.js"></script> -->
+		<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+		<!-- <script src="/js/game.js"></script> -->
+		<!-- <script src="/js/Sprite.js"></script>
+		<script src="/js/Fighter.js"></script> -->
+		<!-- <script src="/js/game.js"></script> -->
+		<link rel="stylesheet" href="/css/style.css" />
+		<title>1942 Game</title>
+
+		<style type="text/css">
+			body {
+				background-color: black;
+			}
+			#container {
+				background: url("/img/background.jpg");
+				width: 1000px;
+				height: 550px;
+			}
+			.hero {
+				background: url("/img/1942.gif");
+				background-position: -85px -180px;
+				width: 28px;
+				height: 28px;
+				position: absolute;
+			}
+			.enemy1 {
+				background: url("/img/1942.gif");
+				background-position: -30px -10px;
+				width: 28px;
+				height: 28px;
+				position: absolute;
+			}
+			.bullet {
+				background: url("/img/1942.gif");
+				background-position: -185px -400px;
+				width: 18px;
+				height: 18px;
+				position: absolute;
+			}
+			#score {
+				position: absolute;
+				border: 10px solid red;
+				top: 20px;
+				left: 800px;
+				background-color: white;
+				padding: 10px;
+				font-size: 30px;
+				font-family: Arial;
+			}
+		</style>
 	</head>
 	<body>
-		<h1>Hello</h1>
-		<section class="vh-100">
-			<div class="container h-100">
-				<div id="gameScreen" class="h-100">
-					<div class="d-flex flex-column align-items-center justify-content-center h-100">
-						<canvas id="canvas">Hello</canvas>
-					</div>
-				</div>
+		<div id="container">
+			<div id="enemies">
+				<div class="enemy1" style="top: 100px; left: 100px"></div>
+				<div class="enemy1" style="top: 100px; left: 200px"></div>
+				<div class="enemy1" style="top: 100px; left: 300px"></div>
+				<div class="enemy1" style="top: 100px; left: 400px"></div>
 			</div>
-		</section>
-		<script>
-			// Connect to the server with Socket.IO
-			const socket = io("http://localhost:8000");
+			<div id="bullets">
+				<div class="bullet" style="top: 150px; left: 200px"></div>
+				<div class="bullet" style="top: 250px; left: 200px"></div>
+				<div class="bullet" style="top: 350px; left: 200px"></div>
+				<div class="bullet" style="top: 450px; left: 200px"></div>
+			</div>
+		</div>
 
-			// when event with the username
-			socket.on("connect", () => {
-				console.log("You connected to the game");
+		<div id="score">100</div>
+
+		<script>
+			window.addEventListener("DOMContentLoaded", (event) => {
+				const socket = io();
+
+				const movement = {
+					up: false,
+					down: false,
+					left: false,
+					right: false,
+				};
+				document.addEventListener("keydown", (event) => {
+					switch (event.key) {
+						case "a":
+							movement.left = true;
+							break;
+						case "w":
+							movement.up = true;
+							break;
+						case "d":
+							movement.right = true;
+							break;
+						case "s":
+							movement.down = true;
+							break;
+					}
+					// console.log(event.key);
+				});
+
+				window.addEventListener("keyup", (event) => {
+					switch (event.key) {
+						case "a":
+							movement.left = false;
+							break;
+						case "w":
+							movement.up = false;
+							break;
+						case "d":
+							movement.right = false;
+							break;
+						case "s":
+							movement.down = false;
+							break;
+					}
+					// console.log(event.key);
+				});
+
+				socket.emit("new player");
+				setInterval(function () {
+					socket.emit("movement", movement);
+				}, 1000 / 60);
+
+				socket.on("state", async function (players) {
+					for (const playerId in players) {
+						const player = players[playerId];
+						console.log(player);
+						let hero = document.getElementById(playerId);
+						if (!hero) {
+							hero = document.createElement("div");
+							hero.classList.add("hero");
+							hero.id = playerId; // set unique ID for each hero element
+							document.getElementById("container").appendChild(hero);
+						}
+						hero.style.top = player.y + "px";
+						hero.style.left = player.x + "px";
+					}
+				});
 			});
 		</script>
-		<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3" crossorigin="anonymous"></script>
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js" integrity="sha384-mQ93GR66B00ZXjt0YO5KlohRA5SY2XofN4zfuZxLkoj1gXtW8ANNCe9d5Y3eG5eD" crossorigin="anonymous"></script>
 	</body>
 </html>
